@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 5432;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('views')); // Serve arquivos estáticos da pasta 'views'
+app.use(express.static('public')); 
 
 // Configuração da sessão
 app.use(session({
