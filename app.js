@@ -6,12 +6,12 @@ const bodyParser = require('body-parser');
 require('dotenv').config(); // Carrega variáveis de ambiente do arquivo .env
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5432;
 
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static('views')); // Serve arquivos estáticos da pasta 'views'
 
 // Configuração da sessão
 app.use(session({
@@ -130,9 +130,53 @@ async function enviarEmail(destinatario, nome_cliente, token) {
     }
 }
 
-// Rotas do sistema
+// Rotas GET para servir os arquivos HTML
 app.get('/', (req, res) => {
-    res.send("Bem-vindo ao sistema!");
+    if (!req.session.logado) {
+        console.warn("Usuário não está logado. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/index.html');
+});
+
+app.get('/criar_usuario', (req, res) => {
+    res.sendFile(__dirname + '/views/criar_usuario.html');
+});
+
+app.get('/enviar_token', (req, res) => {
+    res.sendFile(__dirname + '/views/enviar_token.html');
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(__dirname + '/views/login.html');
+});
+
+app.get('/painel_administrador', (req, res) => {
+    if (!req.session.logado || req.session.tipo_usuario !== 'administrador') {
+        console.warn("Acesso negado à rota /painel_administrador. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/painel_administrador.html');
+});
+
+app.get('/painel_colaborador', (req, res) => {
+    if (!req.session.logado || req.session.tipo_usuario !== 'colaborador') {
+        console.warn("Acesso negado à rota /painel_colaborador. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/painel_colaborador.html');
+});
+
+app.get('/registrar_admin', (req, res) => {
+    res.sendFile(__dirname + '/views/registrar_admin.html');
+});
+
+app.get('/relatorios', (req, res) => {
+    res.sendFile(__dirname + '/views/relatorios.html');
+});
+
+app.get('/validar_token', (req, res) => {
+    res.sendFile(__dirname + '/views/validar_token.html');
 });
 
 // Rota POST para criar usuário
@@ -229,6 +273,61 @@ app.post('/validar_token', async (req, res) => {
         console.error("Erro ao validar token:", err);
         res.status(500).send('Erro ao validar token.');
     }
+});
+
+// Rota POST para processar o login
+app.post('/login', (req, res) => {
+    console.log("Acessando a rota /login (POST)");
+    const { email, senha } = req.body;
+
+    // Validação básica dos campos
+    if (!email || !senha) {
+        return res.status(400).send('Todos os campos são obrigatórios.');
+    }
+
+    // Consulta o banco de dados para verificar as credenciais
+    const query = 'SELECT id, tipo FROM usuarios WHERE email = $1 AND senha = $2';
+    pool.query(query, [email, senha], (err, result) => {
+        if (err) {
+            console.error("Erro ao consultar o banco de dados na rota /login:", err);
+            return res.status(500).send('Erro interno ao acessar o banco de dados.');
+        }
+
+        if (result.rows.length > 0) {
+            const usuario = result.rows[0];
+            console.log(`Login bem-sucedido para o usuário com ID: ${usuario.id}`);
+
+            // Inicia a sessão
+            req.session.logado = true;
+            req.session.usuario_id = usuario.id;
+            req.session.tipo_usuario = usuario.tipo;
+
+            // Redireciona para o painel correspondente
+            if (usuario.tipo === 'administrador') {
+                console.log("Redirecionando para /painel_administrador...");
+                return res.redirect('/painel_administrador');
+            } else {
+                console.log("Redirecionando para /painel_colaborador...");
+                return res.redirect('/painel_colaborador');
+            }
+        } else {
+            console.warn("Email ou senha incorretos.");
+            return res.status(401).send('Email ou senha incorretos.');
+        }
+    });
+});
+
+// Rota GET para logout
+app.get('/logout', (req, res) => {
+    console.log("Encerrando sessão do usuário...");
+    req.session.destroy((err) => {
+        if (err) {
+            console.error("Erro ao encerrar a sessão:", err);
+            return res.status(500).send('Erro ao encerrar a sessão.');
+        }
+        console.log("Sessão encerrada com sucesso.");
+        res.redirect('/login');
+    });
 });
 
 // Iniciar o servidor
