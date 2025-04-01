@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Administrador - G3FIBRA</title>
+    <!-- Link para o CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Cabeçalho com a logo -->
+    <header style="background-color: #1eaa28; padding: 10px;">
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <!-- Logo -->
+            <img src="/images/logo_g3fibra.png" alt="Logo G3FIBRA" style="width: 150px;">
+        </div>
+    </header>
+
+    <!-- Container principal -->
+    <div class="container" style="margin: 20px auto; max-width: 400px;">
+        <h2>Registrar Primeiro Administrador</h2>
+        <form method="POST" action="/registrar_admin">
+            <!-- Campo para o nome -->
+            <input type="text" name="nome" placeholder="Digite o nome do administrador" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+
+            <!-- Campo para o email -->
+            <input type="email" name="email" placeholder="Digite o email do administrador" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+
+            <!-- Campo para a senha -->
+            <input type="password" name="senha" placeholder="Digite a senha do administrador" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+
+            <!-- Botão para registrar -->
+            <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer;">Registrar Administrador</button>
+        </form>
+
+        <!-- Exibir mensagens de sucesso/erro -->
+        <div id="messages">
+            <!-- Mensagens podem ser adicionadas dinamicamente via JavaScript ou enviadas pelo servidor -->
+        </div>
+    </div>
+</body>
+</html>

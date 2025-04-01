@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - G3FIBRA</title>
+    <!-- Link para o CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Cabeçalho com a logo e menu de navegação -->
+    <header style="background-color: #1eaa28; padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <!-- Logo -->
+            <img src="/images/logo_g3fibra.png" alt="Logo G3FIBRA" style="width: 150px;">
+
+            <!-- Menu de navegação -->
+            <nav>
+                <a href="/" style="color: white; text-decoration: none; margin-right: 10px;">Início</a>
+                <a href="/enviar_token" style="color: white; text-decoration: none; margin-right: 10px;">Enviar Token</a>
+                <a href="/relatorios" style="color: white; text-decoration: none;">Relatórios</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Container principal -->
+    <div class="container" style="margin: 20px auto; max-width: 800px;">
+        <h2>Relatórios de Tokens</h2>
+
+        <!-- Formulário de Filtro -->
+        <form method="GET" style="margin-bottom: 20px;">
+            <label for="filtro_nome">Filtrar por Nome:</label>
+            <input type="text" id="filtro_nome" name="filtro_nome" placeholder="Digite o nome do cliente">
+
+            <label for="filtro_email">Filtrar por Email:</label>
+            <input type="email" id="filtro_email" name="filtro_email" placeholder="Digite o email do cliente">
+
+            <button type="submit">Filtrar</button>
+        </form>
+
+        <!-- Botões de Exportação -->
+        <div style="margin-bottom: 20px;">
+            <a href="/exportar_excel" style="color: #1eaa28; text-decoration: none; margin-right: 10px;">Exportar para Excel</a>
+            <a href="/exportar_pdf" style="color: #1eaa28; text-decoration: none;">Exportar para PDF</a>
+        </div>
+
+        <!-- Tabela de Relatórios -->
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th>ID</th>
+                    <th>Nome do Cliente</th>
+                    <th>Email</th>
+                    <th>Token</th>
+                    <th>Expiração</th>
+                </tr>
+            </thead>
+            <tbody id="tokens-table">
+                <!-- Dados serão inseridos aqui via JavaScript ou diretamente no HTML -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Script para carregar os dados dinamicamente -->
+    <script>
+        // Simular a busca de dados do servidor
+        const tokens = [
+            { id: 1, nome_cliente: "João Silva", email_cliente: "joao@example.com", token: "123456", expiracao: "2023-10-01 14:00:00" },
+            { id: 2, nome_cliente: "Maria Souza", email_cliente: "maria@example.com", token: "654321", expiracao: "2023-10-01 15:00:00" }
+        ];
+
+        // Função para preencher a tabela
+        function preencherTabela(tokens) {
+            const tbody = document.getElementById("tokens-table");
+            tbody.innerHTML = ""; // Limpar a tabela
+
+            tokens.forEach(token => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${token.id}</td>
+                    <td>${token.nome_cliente}</td>
+                    <td>${token.email_cliente}</td>
+                    <td>${token.token}</td>
+                    <td>${token.expiracao}</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // Preencher a tabela ao carregar a página
+        window.onload = () => {
+            preencherTabela(tokens);
+        };
+    </script>
+</body>
+</html>

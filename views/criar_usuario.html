@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Usuário - G3FIBRA</title>
+    <!-- Link para o CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Cabeçalho com a logo -->
+    <header style="background-color: #1eaa28; padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <img src="/images/logo_g3fibra.png" alt="Logo G3FIBRA" style="width: 150px;">
+            <nav>
+                <a href="/logout" style="color: white; text-decoration: none;">Sair</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Container principal -->
+    <div class="container" style="margin: 20px auto; max-width: 400px;">
+        <h2>Criar Novo Usuário</h2>
+        <form method="POST" action="/criar_usuario">
+            <!-- Campo para o nome -->
+            <input type="text" name="nome" placeholder="Digite o nome do usuário" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+
+            <!-- Campo para o email -->
+            <input type="email" name="email" placeholder="Digite o email do usuário" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+
+            <!-- Campo para a senha -->
+            <input type="password" name="senha" placeholder="Digite a senha do usuário" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+
+            <!-- Campo para o tipo de usuário -->
+            <label for="tipo">Tipo de Usuário:</label>
+            <select name="tipo" id="tipo" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+                <option value="colaborador">Colaborador</option>
+                <option value="administrador">Administrador</option>
+            </select>
+
+            <!-- Botão para criar o usuário -->
+            <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer;">Criar Usuário</button>
+        </form>
+
+        <!-- Exibir mensagens de sucesso/erro -->
+        <div id="messages">
+            <!-- Mensagens podem ser adicionadas dinamicamente via JavaScript ou enviadas pelo servidor -->
+        </div>
+    </div>
+</body>
+</html>
