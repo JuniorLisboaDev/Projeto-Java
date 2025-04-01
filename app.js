@@ -12,7 +12,6 @@ const PORT = process.env.PORT || 5432;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('views')); // Serve arquivos estáticos da pasta 'views'
-app.use(express.static('public')); 
 
 // Configuração da sessão
 app.use(session({
@@ -148,75 +147,6 @@ app.get('/enviar_token', (req, res) => {
     res.sendFile(__dirname + '/views/enviar_token.html');
 });
 
-app.get('/login', (req, res) => {
-    res.sendFile(__dirname + '/views/login.html');
-});
-
-app.get('/painel_administrador', (req, res) => {
-    if (!req.session.logado || req.session.tipo_usuario !== 'administrador') {
-        console.warn("Acesso negado à rota /painel_administrador. Redirecionando para /login...");
-        return res.redirect('/login');
-    }
-    res.sendFile(__dirname + '/views/painel_administrador.html');
-});
-
-app.get('/painel_colaborador', (req, res) => {
-    if (!req.session.logado || req.session.tipo_usuario !== 'colaborador') {
-        console.warn("Acesso negado à rota /painel_colaborador. Redirecionando para /login...");
-        return res.redirect('/login');
-    }
-    res.sendFile(__dirname + '/views/painel_colaborador.html');
-});
-
-app.get('/registrar_admin', (req, res) => {
-    res.sendFile(__dirname + '/views/registrar_admin.html');
-});
-
-app.get('/relatorios', (req, res) => {
-    res.sendFile(__dirname + '/views/relatorios.html');
-});
-
-app.get('/validar_token', (req, res) => {
-    res.sendFile(__dirname + '/views/validar_token.html');
-});
-
-// Rota POST para criar usuário
-app.post('/criar_usuario', (req, res) => {
-    console.log("Acessando a rota /criar_usuario (POST)");
-    const { nome, email, senha, tipo } = req.body;
-
-    // Validação básica dos campos
-    if (!nome || !email || !senha || !tipo) {
-        return res.status(400).send('Todos os campos são obrigatórios.');
-    }
-
-    // Verifica se o email já existe no banco de dados
-    const queryCheck = 'SELECT id FROM usuarios WHERE email = $1';
-    pool.query(queryCheck, [email], (err, result) => {
-        if (err) {
-            console.error("Erro ao consultar o banco de dados na rota /criar_usuario:", err);
-            return res.status(500).send('Erro interno ao acessar o banco de dados.');
-        }
-
-        if (result.rows.length > 0) {
-            console.warn("Email já cadastrado.");
-            return res.status(400).send('Email já cadastrado.');
-        }
-
-        // Insere o novo usuário no banco de dados
-        const queryInsert = 'INSERT INTO usuarios (nome, email, senha, tipo) VALUES ($1, $2, $3, $4)';
-        pool.query(queryInsert, [nome, email, senha, tipo], (err) => {
-            if (err) {
-                console.error("Erro ao inserir usuário no banco de dados:", err);
-                return res.status(500).send('Erro ao criar usuário.');
-            }
-            console.log(`Usuário criado com sucesso: ${nome} (${email})`);
-            res.send('Usuário criado com sucesso.'); // Alterado para evitar redirecionamentos desnecessários
-        });
-    });
-});
-
-// Rota POST para enviar token
 app.post('/enviar_token', async (req, res) => {
     console.log("Acessando a rota /enviar_token (POST)");
     const { nome_cliente, email_cliente } = req.body;
@@ -231,22 +161,25 @@ app.post('/enviar_token', async (req, res) => {
         console.log(`Gerado novo token: ${token}`);
         salvarToken(nome_cliente, email_cliente, token);
         await enviarEmail(email_cliente, nome_cliente, token);
-        res.send('Token enviado com sucesso.'); // Alterado para evitar redirecionamentos desnecessários
+        res.redirect('/validar_token'); // Redireciona para a página de validação de token
     } catch (err) {
         console.error("Erro ao enviar token:", err);
         res.status(500).send('Erro ao enviar token.');
     }
 });
 
-// Rota POST para validar token
+app.get('/validar_token', (req, res) => {
+    console.log("Acessando a rota /validar_token");
+    if (!req.session.logado) {
+        console.warn("Acesso negado à rota /validar_token. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/validar_token.html');
+});
+
 app.post('/validar_token', async (req, res) => {
     console.log("Acessando a rota /validar_token (POST)");
     const { token } = req.body;
-
-    // Validação básica do campo
-    if (!token) {
-        return res.status(400).send('Token é obrigatório.');
-    }
 
     try {
         const isValid = await validarToken(token);
@@ -261,19 +194,30 @@ app.post('/validar_token', async (req, res) => {
 
         // Determina o botão "INÍCIO" com base no tipo de usuário
         const tipoUsuario = req.session.tipo_usuario || 'colaborador'; // Define um valor padrão
-        const botaoInicio = tipoUsuario === 'administrador' 
-            ? '<a href="/painel_administrador"><button>INÍCIO</button></a>' 
+        const botaoInicio = tipoUsuario === 'administrador'
+            ? '<a href="/painel_administrador"><button>INÍCIO</button></a>'
             : '<a href="/painel_colaborador"><button>INÍCIO</button></a>';
 
         // Envia a resposta com a mensagem e o botão
         res.send(`
-            <h1>${mensagem}</h1>
+            <h1>Validação de Token</h1>
+            <form action="/validar_token" method="POST">
+                <label for="token">Insira o token:</label>
+                <input type="text" id="token" name="token" required><br><br>
+                <button type="submit">Validar</button>
+            </form>
+            <p>${mensagem}</p>
             <p>${botaoInicio}</p>
         `);
     } catch (err) {
         console.error("Erro ao validar token:", err);
         res.status(500).send('Erro ao validar token.');
     }
+});
+
+// Rota GET para login
+app.get('/login', (req, res) => {
+    res.sendFile(__dirname + '/views/login.html');
 });
 
 // Rota POST para processar o login
