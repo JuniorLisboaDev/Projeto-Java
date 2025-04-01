@@ -25,6 +25,43 @@
             <input type="text" id="token" name="token" required>
             <button type="submit">Validar</button>
         </form>
+
+        <!-- Área para exibir a mensagem de validação -->
+        <div id="mensagem-validacao" style="margin-top: 20px;">
+            <!-- Mensagem será inserida aqui pelo servidor -->
+        </div>
+
+        <!-- Botão "INÍCIO" será exibido aqui após a validação -->
+        <div id="botao-inicio" style="margin-top: 20px;">
+            <!-- Botão será inserido aqui pelo servidor -->
+        </div>
     </div>
+
+    <!-- Script para manipular a resposta do servidor -->
+    <script>
+        // Captura os dados enviados pelo servidor após a validação
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mensagem = urlParams.get('mensagem');
+            const tipoUsuario = urlParams.get('tipo_usuario');
+
+            const mensagemDiv = document.getElementById('mensagem-validacao');
+            const botaoInicioDiv = document.getElementById('botao-inicio');
+
+            if (mensagem) {
+                // Exibe a mensagem de validação
+                mensagemDiv.innerHTML = `<p>${mensagem}</p>`;
+            }
+
+            if (tipoUsuario) {
+                // Determina o botão "INÍCIO" com base no tipo de usuário
+                const botaoInicio = tipoUsuario === 'administrador'
+                    ? '<a href="/painel_administrador"><button>INÍCIO</button></a>'
+                    : '<a href="/painel_colaborador"><button>INÍCIO</button></a>';
+
+                botaoInicioDiv.innerHTML = botaoInicio;
+            }
+        });
+    </script>
 </body>
 </html>
