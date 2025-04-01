@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 5432;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('views')); // Serve arquivos estáticos da pasta 'views'
+app.use(express.static('public'));
 
 // Configuração da sessão
 app.use(session({
@@ -130,93 +131,27 @@ async function enviarEmail(destinatario, nome_cliente, token) {
     }
 }
 
-// Rotas GET para servir os arquivos HTML
+// Rota GET para exibir a página inicial
 app.get('/', (req, res) => {
+    console.log("Acessando a rota raiz (/)");
     if (!req.session.logado) {
         console.warn("Usuário não está logado. Redirecionando para /login...");
         return res.redirect('/login');
     }
-    res.sendFile(__dirname + '/views/index.html');
-});
 
-app.get('/criar_usuario', (req, res) => {
-    res.sendFile(__dirname + '/views/criar_usuario.html');
-});
-
-app.get('/enviar_token', (req, res) => {
-    res.sendFile(__dirname + '/views/enviar_token.html');
-});
-
-app.post('/enviar_token', async (req, res) => {
-    console.log("Acessando a rota /enviar_token (POST)");
-    const { nome_cliente, email_cliente } = req.body;
-
-    // Validação básica dos campos
-    if (!nome_cliente || !email_cliente) {
-        return res.status(400).send('Todos os campos são obrigatórios.');
-    }
-
-    try {
-        const token = gerarToken();
-        console.log(`Gerado novo token: ${token}`);
-        salvarToken(nome_cliente, email_cliente, token);
-        await enviarEmail(email_cliente, nome_cliente, token);
-        res.redirect('/validar_token'); // Redireciona para a página de validação de token
-    } catch (err) {
-        console.error("Erro ao enviar token:", err);
-        res.status(500).send('Erro ao enviar token.');
+    // Redireciona para o painel correspondente
+    if (req.session.tipo_usuario === 'administrador') {
+        console.log("Redirecionando para /painel_administrador...");
+        return res.redirect('/painel_administrador');
+    } else {
+        console.log("Redirecionando para /painel_colaborador...");
+        return res.redirect('/painel_colaborador');
     }
 });
 
-app.get('/validar_token', (req, res) => {
-    console.log("Acessando a rota /validar_token");
-    if (!req.session.logado) {
-        console.warn("Acesso negado à rota /validar_token. Redirecionando para /login...");
-        return res.redirect('/login');
-    }
-    res.sendFile(__dirname + '/views/validar_token.html');
-});
-
-app.post('/validar_token', async (req, res) => {
-    console.log("Acessando a rota /validar_token (POST)");
-    const { token } = req.body;
-
-    try {
-        const isValid = await validarToken(token);
-
-        // Renderiza a página com a mensagem de validação
-        let mensagem;
-        if (isValid) {
-            mensagem = "Token válido!";
-        } else {
-            mensagem = "Token inválido ou expirado.";
-        }
-
-        // Determina o botão "INÍCIO" com base no tipo de usuário
-        const tipoUsuario = req.session.tipo_usuario || 'colaborador'; // Define um valor padrão
-        const botaoInicio = tipoUsuario === 'administrador'
-            ? '<a href="/painel_administrador"><button>INÍCIO</button></a>'
-            : '<a href="/painel_colaborador"><button>INÍCIO</button></a>';
-
-        // Envia a resposta com a mensagem e o botão
-        res.send(`
-            <h1>Validação de Token</h1>
-            <form action="/validar_token" method="POST">
-                <label for="token">Insira o token:</label>
-                <input type="text" id="token" name="token" required><br><br>
-                <button type="submit">Validar</button>
-            </form>
-            <p>${mensagem}</p>
-            <p>${botaoInicio}</p>
-        `);
-    } catch (err) {
-        console.error("Erro ao validar token:", err);
-        res.status(500).send('Erro ao validar token.');
-    }
-});
-
-// Rota GET para login
+// Rota GET para exibir a página de login
 app.get('/login', (req, res) => {
+    console.log("Carregando página de login...");
     res.sendFile(__dirname + '/views/login.html');
 });
 
@@ -268,11 +203,112 @@ app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error("Erro ao encerrar a sessão:", err);
-            return res.status(500).send('Erro ao encerrar a sessão.');
+            return res.status(500).send('Erro ao fazer logout.');
         }
-        console.log("Sessão encerrada com sucesso.");
+        console.log("Logout realizado com sucesso. Redirecionando para /login...");
         res.redirect('/login');
     });
+});
+
+// Rota GET para exibir o painel do administrador
+app.get('/painel_administrador', (req, res) => {
+    console.log("Acessando a rota /painel_administrador");
+    if (!req.session.logado || req.session.tipo_usuario !== 'administrador') {
+        console.warn("Acesso negado à rota /painel_administrador. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/painel_administrador.html');
+});
+
+// Rota GET para exibir o painel do colaborador
+app.get('/painel_colaborador', (req, res) => {
+    console.log("Acessando a rota /painel_colaborador");
+    if (!req.session.logado || req.session.tipo_usuario !== 'colaborador') {
+        console.warn("Acesso negado à rota /painel_colaborador. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/painel_colaborador.html');
+});
+
+// Rota GET para exibir o formulário de envio de token
+app.get('/enviar_token', (req, res) => {
+    console.log("Acessando a rota /enviar_token");
+    if (!req.session.logado) {
+        console.warn("Acesso negado à rota /enviar_token. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/enviar_token.html');
+});
+
+// Rota POST para enviar token
+app.post('/enviar_token', async (req, res) => {
+    console.log("Acessando a rota /enviar_token (POST)");
+    const { nome_cliente, email_cliente } = req.body;
+
+    // Validação básica dos campos
+    if (!nome_cliente || !email_cliente) {
+        return res.status(400).send('Todos os campos são obrigatórios.');
+    }
+
+    try {
+        const token = gerarToken();
+        console.log(`Gerado novo token: ${token}`);
+        salvarToken(nome_cliente, email_cliente, token);
+        await enviarEmail(email_cliente, nome_cliente, token);
+        res.redirect('/validar_token'); // Redireciona para a página de validação de token
+    } catch (err) {
+        console.error("Erro ao enviar token:", err);
+        res.status(500).send('Erro ao enviar token.');
+    }
+});
+
+// Rota GET para exibir a página de validação de token
+app.get('/validar_token', (req, res) => {
+    console.log("Acessando a rota /validar_token");
+    if (!req.session.logado) {
+        console.warn("Acesso negado à rota /validar_token. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/validar_token.html');
+});
+
+// Rota POST para validar token
+app.post('/validar_token', async (req, res) => {
+    console.log("Acessando a rota /validar_token (POST)");
+    const { token } = req.body;
+
+    try {
+        const isValid = await validarToken(token);
+
+        // Renderiza a página com a mensagem de validação
+        let mensagem;
+        if (isValid) {
+            mensagem = "Token válido!";
+        } else {
+            mensagem = "Token inválido ou expirado.";
+        }
+
+        // Determina o botão "INÍCIO" com base no tipo de usuário
+        const tipoUsuario = req.session.tipo_usuario || 'colaborador'; // Define um valor padrão
+        const botaoInicio = tipoUsuario === 'administrador'
+            ? '<a href="/painel_administrador"><button>INÍCIO</button></a>'
+            : '<a href="/painel_colaborador"><button>INÍCIO</button></a>';
+
+        // Envia a resposta com a mensagem e o botão
+        res.send(`
+            <h1>Validação de Token</h1>
+            <form action="/validar_token" method="POST">
+                <label for="token">Insira o token:</label>
+                <input type="text" id="token" name="token" required><br><br>
+                <button type="submit">Validar</button>
+            </form>
+            <p>${mensagem}</p>
+            <p>${botaoInicio}</p>
+        `);
+    } catch (err) {
+        console.error("Erro ao validar token:", err);
+        res.status(500).send('Erro ao validar token.');
+    }
 });
 
 // Iniciar o servidor
