@@ -294,30 +294,17 @@ app.post('/validar_token', async (req, res) => {
             mensagem = "Token inválido ou expirado.";
         }
 
-        // Renderiza uma página temporária com a mensagem e redireciona para a página inicial
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="pt-br">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Validação de Token</title>
-                <script>
-                    // Exibe a mensagem e redireciona após 3 segundos
-                    window.onload = function() {
-                        alert("${mensagem}");
-                        setTimeout(function() {
-                            window.location.href = "/";
-                        }, 3000); // Redireciona após 3 segundos
-                    };
-                </script>
-            </head>
-            <body>
-                <h1>Aguarde...</h1>
-                <p>${mensagem} Redirecionando para a página inicial.</p>
-            </body>
-            </html>
-        `);
+        // Verifica o tipo de usuário logado
+        const tipoUsuario = req.session.tipo_usuario || 'colaborador'; // Define um valor padrão
+
+        // Redireciona para a página correspondente ao tipo de usuário
+        if (tipoUsuario === 'administrador') {
+            console.log("Redirecionando para /painel_administrador...");
+            return res.redirect('/painel_administrador');
+        } else {
+            console.log("Redirecionando para /painel_colaborador...");
+            return res.redirect('/painel_colaborador');
+        }
     } catch (err) {
         console.error("Erro ao validar token:", err);
         res.status(500).send('Erro ao validar token.');
