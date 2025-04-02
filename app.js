@@ -297,14 +297,60 @@ app.post('/validar_token', async (req, res) => {
         // Verifica o tipo de usuário logado
         const tipoUsuario = req.session.tipo_usuario || 'colaborador'; // Define um valor padrão
 
-        // Redireciona para a página correspondente ao tipo de usuário
-        if (tipoUsuario === 'administrador') {
-            console.log("Redirecionando para /painel_administrador...");
-            return res.redirect('/painel_administrador');
-        } else {
-            console.log("Redirecionando para /painel_colaborador...");
-            return res.redirect('/painel_colaborador');
-        }
+        // Determina a página de redirecionamento
+        const paginaRedirecionamento = tipoUsuario === 'administrador'
+            ? '/painel_administrador'
+            : '/painel_colaborador';
+
+        // Envia uma resposta HTML temporária com a mensagem e redireciona após 5 segundos
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="pt-br">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Validação de Token</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f9;
+                        margin: 0;
+                        padding: 0;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                    }
+                    .mensagem-validacao {
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin-bottom: 20px;
+                    }
+                    .mensagem-validacao.sucesso {
+                        color: #28a745;
+                    }
+                    .mensagem-validacao.erro {
+                        color: #dc3545;
+                    }
+                </style>
+                <script>
+                    // Exibe a mensagem e redireciona após 5 segundos
+                    window.onload = function() {
+                        const classe = "${isValid ? 'sucesso' : 'erro'}";
+                        document.getElementById('mensagem').className = \`mensagem-validacao \${classe}\`;
+                        setTimeout(function() {
+                            window.location.href = "${paginaRedirecionamento}";
+                        }, 5000); // Redireciona após 5 segundos
+                    };
+                </script>
+            </head>
+            <body>
+                <div id="mensagem">${mensagem}</div>
+                <p>Você será redirecionado em 5 segundos...</p>
+            </body>
+            </html>
+        `);
     } catch (err) {
         console.error("Erro ao validar token:", err);
         res.status(500).send('Erro ao validar token.');
