@@ -278,9 +278,15 @@ app.post('/validar_token', async (req, res) => {
     const { token } = req.body;
 
     try {
+        // Validação básica do campo
+        if (!token) {
+            return res.status(400).send('Token é obrigatório.');
+        }
+
+        // Valida o token
         const isValid = await validarToken(token);
 
-        // Renderiza a página com a mensagem de validação
+        // Define a mensagem com base na validação
         let mensagem;
         if (isValid) {
             mensagem = "Token válido!";
@@ -288,22 +294,29 @@ app.post('/validar_token', async (req, res) => {
             mensagem = "Token inválido ou expirado.";
         }
 
-        // Determina o botão "INÍCIO" com base no tipo de usuário
-        const tipoUsuario = req.session.tipo_usuario || 'colaborador'; // Define um valor padrão
-        const botaoInicio = tipoUsuario === 'administrador'
-            ? '<a href="/painel_administrador"><button>INÍCIO</button></a>'
-            : '<a href="/painel_colaborador"><button>INÍCIO</button></a>';
-
-        // Envia a resposta com a mensagem e o botão
+        // Renderiza uma página temporária com a mensagem e redireciona para a página inicial
         res.send(`
-            <h1>Validação de Token</h1>
-            <form action="/validar_token" method="POST">
-                <label for="token">Insira o token:</label>
-                <input type="text" id="token" name="token" required><br><br>
-                <button type="submit">Validar</button>
-            </form>
-            <p>${mensagem}</p>
-            <p>${botaoInicio}</p>
+            <!DOCTYPE html>
+            <html lang="pt-br">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Validação de Token</title>
+                <script>
+                    // Exibe a mensagem e redireciona após 3 segundos
+                    window.onload = function() {
+                        alert("${mensagem}");
+                        setTimeout(function() {
+                            window.location.href = "/";
+                        }, 3000); // Redireciona após 3 segundos
+                    };
+                </script>
+            </head>
+            <body>
+                <h1>Aguarde...</h1>
+                <p>${mensagem} Redirecionando para a página inicial.</p>
+            </body>
+            </html>
         `);
     } catch (err) {
         console.error("Erro ao validar token:", err);
