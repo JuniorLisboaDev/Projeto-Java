@@ -237,10 +237,10 @@ app.get('/criar_usuario', (req, res) => {
         console.warn("Acesso negado à rota /criar_usuario. Redirecionando para /login...");
         return res.redirect('/login');
     }
-    res.sendFile(__dirname + '/views/criar_usuario.html');
+    res.sendFile(__dirname + '/views/criar_usuario.html'); // Certifique-se de que o arquivo existe na pasta 'views'
 });
 
-// Rota POST para criar usuário
+// Rota POST para processar a criação de usuário
 app.post('/criar_usuario', (req, res) => {
     console.log("Acessando a rota /criar_usuario (POST)");
     const { nome, email, senha, tipo } = req.body;
@@ -257,7 +257,6 @@ app.post('/criar_usuario', (req, res) => {
             console.error("Erro ao consultar o banco de dados na rota /criar_usuario:", err);
             return res.status(500).send('Erro interno ao acessar o banco de dados.');
         }
-
         if (result.rows.length > 0) {
             console.warn("Email já cadastrado.");
             return res.status(400).send('Email já cadastrado.');
@@ -270,12 +269,11 @@ app.post('/criar_usuario', (req, res) => {
                 console.error("Erro ao inserir usuário no banco de dados:", err);
                 return res.status(500).send('Erro ao criar usuário.');
             }
-            console.log(Usuário criado com sucesso: ${nome} (${email}));
-            res.send('Usuário criado com sucesso.'); // Alterado para evitar redirecionamentos desnecessários
+            console.log(`Usuário criado com sucesso: ${nome} (${email})`);
+            res.send('Usuário criado com sucesso.'); // Altere para redirecionar ou exibir uma mensagem personalizada
         });
     });
 });
-
 
 // Rota GET para exibir o formulário de envio de token
 app.get('/enviar_token', (req, res) => {
