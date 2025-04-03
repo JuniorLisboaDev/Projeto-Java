@@ -240,11 +240,6 @@ app.get('/criar_usuario', (req, res) => {
     res.sendFile(__dirname + '/views/criar_usuario.html');
 });
 
-// Rota POST para processar a criação de usuário
-app.post('/criar_usuario', (req, res) => {
-    console.log("Acessando a rota /criar_usuario (POST)");
-    const { nome, email, senha, tipo } = req.body;
-
 // Rota GET para exibir o formulário de envio de token
 app.get('/enviar_token', (req, res) => {
     console.log("Acessando a rota /enviar_token");
