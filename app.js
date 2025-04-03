@@ -230,6 +230,21 @@ app.get('/painel_colaborador', (req, res) => {
     res.sendFile(__dirname + '/views/painel_colaborador.html');
 });
 
+// Rota GET para exibir o formulário de criação de usuário
+app.get('/criar_usuario', (req, res) => {
+    console.log("Carregando página de criação de usuário...");
+    if (!req.session.logado || req.session.tipo_usuario !== 'administrador') {
+        console.warn("Acesso negado à rota /criar_usuario. Redirecionando para /login...");
+        return res.redirect('/login');
+    }
+    res.sendFile(__dirname + '/views/criar_usuario.html');
+});
+
+// Rota POST para processar a criação de usuário
+app.post('/criar_usuario', (req, res) => {
+    console.log("Acessando a rota /criar_usuario (POST)");
+    const { nome, email, senha, tipo } = req.body;
+
 // Rota GET para exibir o formulário de envio de token
 app.get('/enviar_token', (req, res) => {
     console.log("Acessando a rota /enviar_token");
