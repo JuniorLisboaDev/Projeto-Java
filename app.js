@@ -240,6 +240,41 @@ app.get('/criar_usuario', (req, res) => {
     res.sendFile(__dirname + '/views/criar_usuario.html');
 });
 
+// Rota POST para processar a criação de usuário
+app.post('/criar_usuario', (req, res) => {
+    console.log("Acessando a rota /criar_usuario (POST)");
+    const { nome, email, senha, tipo } = req.body;
+
+    // Validação básica dos campos
+    if (!nome || !email || !senha || !tipo) {
+        return res.status(400).send('Todos os campos são obrigatórios.');
+    }
+
+    // Verifica se o email já existe no banco de dados
+    const queryCheck = 'SELECT id FROM usuarios WHERE email = $1';
+    pool.query(queryCheck, [email], (err, result) => {
+        if (err) {
+            console.error("Erro ao consultar o banco de dados na rota /criar_usuario:", err);
+            return res.status(500).send('Erro interno ao acessar o banco de dados.');
+        }
+        if (result.rows.length > 0) {
+            console.warn("Email já cadastrado.");
+            return res.status(400).send('Email já cadastrado.');
+        }
+
+        // Insere o novo usuário no banco de dados
+        const queryInsert = 'INSERT INTO usuarios (nome, email, senha, tipo) VALUES ($1, $2, $3, $4)';
+        pool.query(queryInsert, [nome, email, senha, tipo], (err) => {
+            if (err) {
+                console.error("Erro ao inserir usuário no banco de dados:", err);
+                return res.status(500).send('Erro ao criar usuário.');
+            }
+            console.log(`Usuário criado com sucesso: ${nome} (${email})`);
+            res.send('Usuário criado com sucesso.');
+        });
+    });
+});
+
 // Rota GET para exibir o formulário de envio de token
 app.get('/enviar_token', (req, res) => {
     console.log("Acessando a rota /enviar_token");
